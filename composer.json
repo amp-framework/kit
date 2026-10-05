@@ -1,7 +1,7 @@
 {
     "name": "amp-framework/ampf-kit",
     "description": "Small building blocks that applications on ampf share: UUID ids, the MariaDB UUID column, the migrations' set-up, an integration test case on a disposable database, and guards that hold conventions as tests",
-    "license": "proprietary",
+    "license": "MIT",
     "type": "library",
     "require": {
         "php": ">=8.5",
