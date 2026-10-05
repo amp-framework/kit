@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ampf\Kit\Tests\Integration;
 
 use ampf\Doctrine\EntityManagerFactoryInterface;
+use ampf\Kit\Testing\SelectCountingMiddleware;
 use ampf\Kit\Tests\Fixtures\App\Doctrine\Entity\NoteEntity;
 use ampf\Kit\Tests\Fixtures\App\Doctrine\Entity\ShelfEntity;
 use ampf\Kit\Tests\Support\FixtureApplicationTestCase;
@@ -12,6 +13,8 @@ use ampf\Service\Hasher\HasherServiceInterface;
 use ampf\Testing\CheapHasherService;
 use ampf\Testing\ExpectsExactMessage;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Doctrine\DBAL\Logging\Middleware as LoggingMiddleware;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -207,18 +210,37 @@ final class IntegrationTestCaseTest extends FixtureApplicationTestCase
         self::dbText(['a list']);
     }
 
-    public function testTheSelectsOfAWorkAreCountedOnTheTestsConnection(): void
+    public function testTheSelectsOfAWorkAreCountedOnEveryConnection(): void
     {
         $connection = $this->em->getConnection();
+        $own = static fn () => $connection->fetchOne('SELECT COUNT(*) FROM notes');
 
         self::assertSame(0, $this->countSelects(static fn () => null));
-        self::assertSame(1, $this->countSelects(static fn () => $connection->fetchOne('SELECT COUNT(*) FROM notes')));
+        self::assertSame(1, $this->countSelects($own));
         self::assertSame(
             2,
             $this->countSelects(static fn () => [
                 $connection->fetchOne('SELECT COUNT(*) FROM notes'),
                 $connection->fetchOne('SELECT COUNT(*) FROM shelves'),
             ]),
+        );
+        // A request has a connection of its own, which the page asks once: every request, and not counted twice
+        self::assertSame(1, $this->countSelects(fn () => $this->get('notes')));
+        self::assertSame(1, $this->countSelects(fn () => $this->get('notes')));
+        self::assertSame(3, $this->countSelects(fn () => [$own(), $this->get('notes'), $own()]));
+    }
+
+    public function testTheCountingJoinsTheMiddlewaresOfTheApplicationAndIsPutInOnce(): void
+    {
+        $this->get('notes');
+        $doctrine = $this->configuration('http')['doctrine'];
+        self::assertIsArray($doctrine);
+        $configuration = $doctrine['configuration'];
+        self::assertInstanceOf(Configuration::class, $configuration);
+
+        self::assertSame(
+            [LoggingMiddleware::class, SelectCountingMiddleware::class],
+            array_map(static fn (object $middleware): string => $middleware::class, $configuration->getMiddlewares()),
         );
     }
 

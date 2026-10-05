@@ -24,6 +24,7 @@ developed together, a path repository (`{"type": "path", "url": "../kit"}`) link
 | `Doctrine\Type\UuidType` | DBAL's `guid` as MariaDB's `UUID` column (16 bytes, text in and out) |
 | `Bootstrap\MigrationsFactory`, `Bootstrap\DoctrineConfiguration` | Doctrine Migrations over the application's `migrations` block (`bin/doctrine` and the guard of the migrations both use it), and the name of the migrations' own table, which the schema tool is told to leave alone (`ignoreMigrationsTable()`) |
 | `Testing\IntegrationTestCase` | ampf's `ApplicationTestCase` on a disposable MariaDB (below) |
+| `Testing\SelectCountingMiddleware`, `Testing\SelectCounter` | The count of the SELECT statements that every connection of the tests sends: the test's own and a request's (`countSelects()` reads it) |
 | `Testing\Guard\…` | Conventions as tests that an application points at its own files and at its running self (below) |
 
 `config/default.php` is the package's `doctrine` block, which an application lists after ampf's two files: every datetime in
@@ -77,8 +78,11 @@ after ampf's files and a disposable MariaDB: a subclass names the project root (
 refuses a database whose name does not end in `_test` or `_test_<n>` (`disposableDatabasePattern()`, which an application may
 tighten), makes the schema from the mapping once per process, and starts every test with empty tables. `$em` is the test's own
 entity manager, which the beans of `ownBean()` share; a request's is closed when the next request starts. `dbText()`,
-`dbTexts()`, `countSelects()` and `rebuildSchema()` are the helpers. It extends PHPUnit's `TestCase`: an application that uses it
-has PHPUnit as a development dependency.
+`dbTexts()`, `countSelects()` and `rebuildSchema()` are the helpers. `countSelects($work)` says how many SELECT statements the
+work sent on every connection, the test's own and those of the requests and commands it runs, each of which has one of its
+own: the test case puts `SelectCountingMiddleware` into the Doctrine configuration of the tests, so that a page or a service
+that must cost a fixed number of queries can be held to it (and, as a number, above zero). It extends PHPUnit's `TestCase`: an
+application that uses it has PHPUnit as a development dependency.
 
 **The guards.** `ampf\Kit\Testing\Guard\` holds conventions as tests of an application's own files, in the
 pattern of ampf's guards (`ampf\Testing\Guard\`): a guard is an abstract `TestCase` that carries its tests and data providers,

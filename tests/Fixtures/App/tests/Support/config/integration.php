@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use ampf\Bootstrap\DoctrineConfiguration;
+use Doctrine\DBAL\Logging\Middleware as LoggingMiddleware;
 use Pdo\Mysql;
+use Psr\Log\NullLogger;
 
 /*
  * The fixture application's configuration for its tests, in place of config/local.php: the last file an
@@ -14,10 +16,13 @@ $host = getenv('AMPF_KIT_TEST_DB_HOST');
 // Mutation testing runs several test processes at once, and Infection numbers them in TEST_TOKEN (1, 2, …): each gets a
 // database of its own (docker/test-database-init.sh), or one would empty the tables another is working with
 $token = getenv('TEST_TOKEN');
+// A middleware of the application's own, which the counting of SELECT statements joins (IntegrationTestCase::configuration())
+$configuration = DoctrineConfiguration::create([dirname(__DIR__, 3) . '/Doctrine/Entity']);
+$configuration->setMiddlewares([new LoggingMiddleware(new NullLogger())]);
 
 return [
     'doctrine' => [
-        'configuration' => DoctrineConfiguration::create([dirname(__DIR__, 3) . '/Doctrine/Entity']),
+        'configuration' => $configuration,
         'connectionParams' => [
             'driver' => 'pdo_mysql',
             'host' => $host === false || $host === '' ? 'database' : $host,

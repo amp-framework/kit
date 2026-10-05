@@ -8,6 +8,7 @@ use ampf\Bean\BeanFactory;
 use ampf\Bean\BeanFactoryInterface;
 use ampf\Doctrine\EntityManagerFactoryInterface;
 use ampf\Testing\ApplicationTestCase;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
 use RuntimeException;
@@ -26,6 +27,9 @@ use RuntimeException;
  * so that a transaction a request left open is rolled back and no connection is left behind. The test's own, $em, is
  * the one of a scope of the test (ownBean()), closed when the test ends: for the fixtures and the assertions — what a
  * request changed is read after `$this->em->clear()`, since an entity the test holds is not the one the request changed.
+ *
+ * Every connection the Doctrine configuration makes counts the SELECT statements it sends (SelectCountingMiddleware, put into
+ * the configuration of the tests by configuration()), which countSelects() reads.
  *
  * A subclass that overrides setUp() or tearDown() calls the parent's.
  */
@@ -98,6 +102,30 @@ abstract class IntegrationTestCase extends ApplicationTestCase
     }
 
     /**
+     * The configuration of the transport (ApplicationTestCase::configuration()), with the counting of SELECT statements put
+     * once into the middlewares of its Doctrine configuration: every connection that is made from now on counts.
+     *
+     * @return array<string, mixed>
+     */
+    protected function configuration(string $transport): array
+    {
+        $config = parent::configuration($transport);
+        $doctrine = $config['doctrine'];
+        assert(is_array($doctrine), 'The configuration has no doctrine block.');
+        $configuration = $doctrine['configuration'];
+        assert($configuration instanceof Configuration, 'The configuration has no doctrine.configuration.');
+
+        foreach ($configuration->getMiddlewares() as $middleware) {
+            if ($middleware instanceof SelectCountingMiddleware) {
+                return $config;
+            }
+        }
+        $configuration->setMiddlewares([...$configuration->getMiddlewares(), new SelectCountingMiddleware()]);
+
+        return $config;
+    }
+
+    /**
      * The pattern the name of the database has to match before the tests empty its tables: a name that ends in `_test`,
      * or in `_test_<n>` (the database of a parallel process of the mutation testing). An application may tighten it to
      * the names of its own test stack.
@@ -108,9 +136,9 @@ abstract class IntegrationTestCase extends ApplicationTestCase
     }
 
     /**
-     * A bean of the test's own scope, which shares $em: a service whose work countSelects() counts, or whose repository
-     * the test replaces. The scope is the one setUp() made: what useBean() and configure() change afterwards reaches
-     * the scopes of the requests, not this one.
+     * A bean of the test's own scope, which shares $em: a service whose work a test runs without a request, or whose
+     * repository the test replaces. The scope is the one setUp() made: what useBean() and configure() change afterwards
+     * reaches the scopes of the requests, not this one.
      */
     protected function ownBean(string $id): mixed
     {
@@ -142,16 +170,17 @@ abstract class IntegrationTestCase extends ApplicationTestCase
     }
 
     /**
-     * How many SELECT statements the work sent to the database on the test's own connection: what a page or a service
-     * that must cost a fixed number of queries is held to (their beans from ownBean(), `$this->em->clear()` first, so
-     * that nothing is loaded already).
+     * How many SELECT statements the work sent to the database, on every connection: the test's own and those of the
+     * requests and commands it runs, each of which has a connection of its own. What a page or a service that must cost a
+     * fixed number of queries is held to (`$this->em->clear()` first, so that nothing is loaded already); a test that
+     * holds a cost to a number holds it above zero as well.
      */
     protected function countSelects(callable $work): int
     {
-        $before = $this->selectsSoFar();
+        $before = SelectCounter::total();
         $work();
 
-        return $this->selectsSoFar() - $before;
+        return SelectCounter::total() - $before;
     }
 
     /** Drops every table and makes the schema from the mapping again, as the first test of the process found it. */
@@ -177,14 +206,6 @@ abstract class IntegrationTestCase extends ApplicationTestCase
     {
         $entityManager->close();
         $entityManager->getConnection()->close();
-    }
-
-    /** The number of SELECT statements the session of the test's own connection has run. */
-    private function selectsSoFar(): int
-    {
-        $status = $this->em->getConnection()->fetchAllKeyValue("SHOW SESSION STATUS LIKE 'Com_select'");
-
-        return (int)self::dbText($status['Com_select']);
     }
 
     /**

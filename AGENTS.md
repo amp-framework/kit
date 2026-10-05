@@ -65,7 +65,7 @@ sh docker/mutation [src/Path/File.php]            # a part prints its score and 
 
 | Location | Contents |
 | --- | --- |
-| `src/` | `ampf\Kit\`: `Bootstrap/`, `Doctrine/`, `Helper/`, `Testing/` (the integration test case, `Guard/`) |
+| `src/` | `ampf\Kit\`: `Bootstrap/`, `Doctrine/`, `Helper/`, `Testing/` (the integration test case, the counting of SELECTs, `Guard/`) |
 | `config/` | `default.php`, which an application lists after ampf's files |
 | `tests/Unit/`, `tests/Integration/` | The parts and the guards that read files; the database, the integration test case and the guards that boot an application |
 | `tests/Fixtures/App/` | The fixture application, a small application on the package: a shelf and its notes with their migration, one page that asks the database, and its test database (`tests/Support/config/integration.php`) |
