@@ -1,6 +1,6 @@
-# ampf-kit: agent guide
+# amp-framework/kit: agent guide
 
-ampf-kit (`amp-framework/ampf-kit`) holds the small building blocks that applications on ampf share: UUID ids with
+The package `amp-framework/kit` holds the small building blocks that applications on ampf share: UUID ids with
 MariaDB's UUID column, the set-up of Doctrine's migrations, the integration test case, and the guards that hold conventions as tests.
 `README.md` says what it holds and how an application wires it; this file is the orientation for working **on** it, and
 changes with the conventions it states.

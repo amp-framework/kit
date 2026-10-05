@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0f4e255db581388447b15c97a9456975",
+    "content-hash": "cf514771bfa340dfc483d968339a007b",
     "packages": [
         {
             "name": "amp-framework/ampf",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/amp-framework/ampf.git",
-                "reference": "ee870554634fe2c3c026af869e2558924c83ad6d"
+                "reference": "3a079cf769d557984f7b472b8862f8ab80964e8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/amp-framework/ampf/zipball/ee870554634fe2c3c026af869e2558924c83ad6d",
-                "reference": "ee870554634fe2c3c026af869e2558924c83ad6d",
+                "url": "https://api.github.com/repos/amp-framework/ampf/zipball/3a079cf769d557984f7b472b8862f8ab80964e8d",
+                "reference": "3a079cf769d557984f7b472b8862f8ab80964e8d",
                 "shasum": ""
             },
             "require": {
@@ -41,6 +41,9 @@
                 "slevomat/coding-standard": "^8.31",
                 "squizlabs/php_codesniffer": "^4.0"
             },
+            "suggest": {
+                "phpunit/phpunit": "^13.3, for ampf\\Testing: the doubles, ApplicationTestCase and the guards an application's tests use"
+            },
             "default-branch": true,
             "type": "library",
             "autoload": {
@@ -57,7 +60,7 @@
                 "issues": "https://github.com/amp-framework/ampf/issues",
                 "source": "https://github.com/amp-framework/ampf/tree/master"
             },
-            "time": "2026-10-01T22:01:13+00:00"
+            "time": "2026-10-05T19:07:44+00:00"
         },
         {
             "name": "doctrine/collections",

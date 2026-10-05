@@ -1,4 +1,4 @@
-# ampf-kit
+# amp-framework/kit
 
 Small building blocks that applications on [ampf](https://github.com/amp-framework/ampf) have in common and that are
 not the framework's business: UUID ids with MariaDB's `UUID` column, the set-up of Doctrine's migrations, an integration
@@ -7,10 +7,10 @@ test case on a disposable database, and guards that hold an application to a set
 What belongs here fits an application as it is. What every application would have to override — its users, its login,
 its controllers, its settings, its look — is the application's own, and so is what only one application needs.
 
-**Installation.** The package is not on Packagist. An application requires it from its Git repository, as any private
-package: `"repositories": [{"type": "vcs", "url": "<the repository's URL>"}]` and `"amp-framework/ampf-kit": "dev-main"`.
-While the package and an application are developed together, a path repository (`{"type": "path", "url":
-"../ampf-kit"}`) links a checkout into the application's `vendor/` instead.
+**Installation.** `composer require amp-framework/kit:dev-main`; the package is on
+[Packagist](https://packagist.org/packages/amp-framework/kit) and requires ampf. While the package and an application are
+developed together, a path repository (`{"type": "path", "url": "../kit"}`) links a checkout into the application's
+`vendor/` instead.
 
 ## What it holds
 
@@ -39,7 +39,7 @@ ampf's two files and before the application's own:
 $config = ApplicationContext::boot([
     $root . '/vendor/amp-framework/ampf/config/default.php',
     $root . '/vendor/amp-framework/ampf/config/http.php',      // or cli.php
-    $root . '/vendor/amp-framework/ampf-kit/config/default.php',
+    $root . '/vendor/amp-framework/kit/config/default.php',
     $root . '/config/default.php',
     $root . '/config/http.php',                                // or cli.php
     $root . '/config/local.php',
