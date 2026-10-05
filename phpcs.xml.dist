@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="ampf-kit">
+    <!-- ampf's coding standard, as it is: no overrides here. -->
+    <rule ref="vendor/amp-framework/ampf/phpcs.xml.dist"/>
+    <file>src</file>
+    <file>config</file>
+    <file>tests</file>
+    <!-- The fixtures of the guards (tests/Fixtures/<Guard>) are the applications that a guard judges, the bad ones on purpose -->
+    <exclude-pattern>tests/Fixtures/*Guard/*</exclude-pattern>
+    <!-- up() and down() take the schema whether a migration needs it or not: the signature is Doctrine's -->
+    <rule ref="SlevomatCodingStandard.Functions.UnusedParameter">
+        <exclude-pattern>src/Migration/*</exclude-pattern>
+        <exclude-pattern>tests/Fixtures/*/Migration/*</exclude-pattern>
+    </rule>
+</ruleset>

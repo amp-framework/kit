@@ -1,0 +1,57 @@
+#!/bin/sh
+# Runs a command in a throwaway container of the development image, as the calling user, with the checkout at /app
+# and no network - only Composer's downloads need one.
+#
+#   sh docker/tooling install                   # composer install from the lock (network)
+#   sh docker/tooling composer phpcs            # any composer script
+#   sh docker/tooling php bin/index.php help    # anything else
+#
+# The image is built from docker/build/Dockerfile on first use (`sh docker/tooling build` builds it again from the
+# newest base images). Unreleased ampf and the shared package: docker/mounts.sh.
+set -eu
+
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+image=${AMPF_KIT_TOOLING_IMAGE:-ampf-kit-tooling}
+
+if [ "${1:-}" = build ]; then
+    exec docker build --pull --tag "$image" "$project_dir/docker/build"
+fi
+
+if ! docker image inspect "$image" >/dev/null 2>&1; then
+    docker build --tag "$image" "$project_dir/docker/build" >&2
+fi
+
+network=none
+case "${1:-}" in
+    install)
+        network=bridge
+        shift
+        set -- composer install --no-interaction "$@"
+        ;;
+    update | require | audit)
+        network=bridge
+        set -- composer "$@"
+        ;;
+esac
+
+if [ "$#" -eq 0 ]; then
+    echo 'Usage: sh docker/tooling install|update|require|audit|build|<command> [arguments...]' >&2
+    exit 1
+fi
+
+. "$project_dir/docker/mounts.sh"
+
+# An interactive terminal only when there is one (a shell, php -a); never in a pipeline or CI
+tty=
+if [ -t 0 ] && [ -t 1 ]; then
+    tty=-it
+fi
+
+# shellcheck disable=SC2086 # $tty and $mounts are empty or whole options
+exec docker run --rm $tty --network "$network" \
+    --user "$(id -u):$(id -g)" \
+    -e HOME=/tmp \
+    -e COMPOSER_HOME=/tmp/composer \
+    -e COMPOSER_CACHE_DIR=/app/cache/composer \
+    -v "$project_dir:/app" $mounts -w /app \
+    "$image" "$@"

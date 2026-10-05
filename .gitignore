@@ -1,0 +1,30 @@
+# The development container's user has the checkout as its home (docker/build/Dockerfile): what its shells and
+# tools write there (bash, BusyBox ash, less, git, the mariadb client, Composer, php -a, XDG caches and settings).
+/.ash_history
+/.bash_history
+/.cache/
+/.composer/
+/.config/
+/.gitconfig
+/.lesshst
+/.local/
+/.mariadb_history
+/.mysql_history
+/.php_history
+
+# The IDE
+/.idea/
+
+# Anything that looks like a credential
+/.secrets/
+/.env
+/.env.*
+*.pem
+*.key
+
+# Runtime material; the CACHEDIR.TAG keeps backup tools out of the cache and the dependencies
+/cache/*
+!/cache/CACHEDIR.TAG
+
+/vendor/*
+!/vendor/CACHEDIR.TAG

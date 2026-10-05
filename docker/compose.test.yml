@@ -1,0 +1,49 @@
+# The disposable test stack, a Compose project of its own: a MariaDB that lives in memory, and the container that runs
+# the integration suite against it (docker/test-integration starts both and tears all of it down after every run). The
+# network has no way out; the credentials are throw-away values that exist nowhere else.
+name: ampf-kit-test
+
+services:
+  # The suite's runner: the development image with the checkout mounted
+  phpunit:
+    build:
+      context: build/
+    image: ampf-kit-tooling
+    volumes:
+      - ..:/app
+    working_dir: /app
+    environment:
+      HOME: /tmp
+      AMPF_KIT_TEST_DB_HOST: database
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - test
+    command: [vendor/bin/phpunit, --testsuite, integration]
+
+  database:
+    # The shared MariaDB runs mariadb:lts: track the same tag
+    image: mariadb:lts
+    environment:
+      MARIADB_DATABASE: ampf_kit_test
+      MARIADB_USER: ampf_kit_test
+      MARIADB_PASSWORD: disposable-test-only
+      MARIADB_ROOT_PASSWORD: disposable-root-only
+    tmpfs:
+      - /var/lib/mysql
+    volumes:
+      # The databases ampf_kit_test_1 to _32, one for each parallel process of docker/mutation
+      - ./test-database-init.sh:/docker-entrypoint-initdb.d/10-databases.sh:ro
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      - test
+
+networks:
+  test:
+    internal: true

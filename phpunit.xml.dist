@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php" cacheDirectory="cache/phpunit"
+         failOnWarning="true" failOnRisky="true" failOnNotice="true"
+         failOnDeprecation="true" failOnPhpunitDeprecation="true"
+         failOnEmptyTestSuite="true">
+    <testsuites>
+        <!-- The package's parts, and the guards over its configuration: nothing booted, nothing connected. -->
+        <testsuite name="unit"><directory>tests/Unit</directory></testsuite>
+        <!-- The parts that need the disposable database (docker/compose.test.yml), and real requests through a small application. -->
+        <testsuite name="integration"><directory>tests/Integration</directory></testsuite>
+    </testsuites>
+    <!--
+        restrictNotices / restrictWarnings: notices and warnings raised inside the project's own files fail a run.
+        Deprecations fail a run wherever they come from: the locked vendor tree raises none on PHP 8.5, and a new
+        one is a signal, not noise.
+    -->
+    <source restrictNotices="true" restrictWarnings="true">
+        <include>
+            <directory>src</directory>
+            <directory>config</directory>
+            <directory>tests</directory>
+        </include>
+    </source>
+</phpunit>

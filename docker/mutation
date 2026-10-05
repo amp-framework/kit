@@ -1,0 +1,57 @@
+#!/bin/sh
+# Mutation testing: Infection (infection.json5) changes the application's code in small ways, one at a time ("mutants":
+# a `>` becomes `>=`, a condition is negated, a call is dropped), and runs the tests that cover the change. A mutant that
+# every test survives ("escaped") shows a test that does not pin what it seems to. The runs go on the disposable MariaDB of
+# docker/compose.test.yml, a database for each parallel process (TEST_TOKEN, docker/test-database-init.sh). The whole
+# application is held to the thresholds of infection.json5; a run of a part (a path, --filter, --git-diff-lines, --id)
+# prints its score and never fails on them. What escaped is in cache/infection/infection.log. Arguments go to Infection:
+#
+#   sh docker/mutation                                       # the whole application, against the thresholds
+#   sh docker/mutation src/Helper/Uuid.php   # one file
+#   sh docker/mutation --filter=src/Service --threads=2
+#
+# Unreleased ampf and the shared package: docker/mounts.sh.
+set -eu
+
+project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+compose="docker compose -f $project_dir/docker/compose.test.yml"
+
+. "$project_dir/docker/mounts.sh"
+
+cleanup() {
+    $compose down --remove-orphans >/dev/null 2>&1 || true
+}
+trap cleanup EXIT INT TERM
+
+# One database per process, 32 of them: the processes are as many as the machine has cores, and no more than the databases
+threads=$(nproc 2>/dev/null || echo 2)
+if [ "$threads" -gt 32 ]; then
+    threads=32
+fi
+
+# Only a run of the whole application is held to the thresholds: a path, --filter, --git-diff-… or --id make it partial
+# (options take their value as --name=value)
+thresholds=
+for argument in "$@"; do
+    case "$argument" in
+        --filter=* | --git-diff-* | --id=*) thresholds='--min-msi=0 --min-covered-msi=0' ;;
+        -*) ;;
+        *) thresholds='--min-msi=0 --min-covered-msi=0' ;;
+    esac
+done
+
+mkdir -p "$project_dir/cache/infection"
+rm -f "$project_dir/cache/infection/summary.log"
+
+# The initial run collects the coverage of both suites and builds its report in one process, which needs more than the 128 MB that PHP
+# has by default (the option replaces the one of infection.json5, so it carries pcov's too)
+# shellcheck disable=SC2086 # $mounts and $thresholds are empty or whole options
+$compose run --rm --user "$(id -u):$(id -g)" $mounts phpunit \
+    php -d memory_limit=1G vendor/bin/infection --threads="$threads" --with-uncovered --initial-tests-php-options='-d pcov.enabled=1 -d memory_limit=1G' $thresholds "$@"
+
+# A mutant that was skipped (its tests take too long: the timeout of infection.json5) was not tested, and the score does
+# not count it: that is no pass
+if ! grep -q '^Skipped: 0$' "$project_dir/cache/infection/summary.log"; then
+    echo 'Infection skipped mutants, which no test was run for: raise "timeout" in infection.json5.' >&2
+    exit 1
+fi

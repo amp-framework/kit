@@ -1,0 +1,17 @@
+includes:
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+
+parameters:
+    checkExplicitMixed: true
+    level: max
+    tmpDir: cache/phpstan
+    paths:
+        - src
+        - config
+        - tests
+    excludePaths:
+        # The fixtures of the guards (tests/Fixtures/<Guard>) are the applications that a guard judges, the bad ones on
+        # purpose: the guard's test loads them, nothing analyses them as the package's own code
+        analyse:
+            - tests/Fixtures/*Guard/*

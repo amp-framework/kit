@@ -1,0 +1,56 @@
+{
+    "name": "amp-framework/ampf-kit",
+    "description": "Small building blocks that applications on ampf share: UUID ids, the MariaDB UUID column, the migrations' set-up, an integration test case on a disposable database, and guards that hold conventions as tests",
+    "license": "proprietary",
+    "type": "library",
+    "require": {
+        "php": ">=8.5",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "amp-framework/ampf": "dev-master",
+        "doctrine/migrations": "^3.9"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "infection/infection": "^0.35",
+        "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpunit/phpunit": "^13.0",
+        "slevomat/coding-standard": "^8.31",
+        "squizlabs/php_codesniffer": "^4.0"
+    },
+    "suggest": {
+        "ext-dom": "ampf\\Kit\\Testing\\Guard\\TemplateTextGuard reads the templates with PHP's HTML parser (Dom\\HTMLDocument)",
+        "ext-intl": "ampf\\Kit\\Testing\\Guard\\TranslationFilesGuard reads the texts as ICU messages (MessageFormatter)",
+        "ext-tokenizer": "ampf\\Kit\\Testing\\Guard\\SourceCode reads the attributes and the class-strings of a source file with PHP's tokenizer (PhpToken), for EntityConventionsGuard",
+        "phpunit/phpunit": "ampf\\Kit\\Testing, the test case and the guards, extend PHPUnit's TestCase: an application that uses them has it as a development dependency"
+    },
+    "autoload": {
+        "psr-4": {
+            "ampf\\Kit\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ampf\\Kit\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "phpcs": "@php vendor/bin/phpcs",
+        "phpcbf": "@php vendor/bin/phpcbf",
+        "cs:check": "@php vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "@php vendor/bin/php-cs-fixer fix",
+        "phpstan": "@php -dmemory_limit=2G vendor/bin/phpstan analyse",
+        "test": "@php vendor/bin/phpunit --testsuite unit",
+        "test:unit": "@php vendor/bin/phpunit --testsuite unit",
+        "test:integration": "@php vendor/bin/phpunit --testsuite integration"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "infection/extension-installer": false
+        },
+        "sort-packages": true
+    }
+}

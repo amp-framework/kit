@@ -1,0 +1,41 @@
+{
+    // Mutation testing with Infection: `sh docker/mutation`. The reports and the temporary files stay in
+    // cache/infection, which Git ignores.
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": ["src"]
+    },
+    "tmpDir": "cache/infection",
+    "logs": {
+        "text": "cache/infection/infection.log",
+        "summary": "cache/infection/summary.log"
+    },
+    "testFramework": "phpunit",
+    // Seconds that the tests of one mutant may take. Infection does not test a mutant at all when the tests that cover it
+    // add up to more than this ("skipped"), and the core classes (the ids, the configuration) are covered by every
+    // test: the limit stays far above what all the tests take together, and docker/mutation fails on a skipped mutant.
+    "timeout": 120,
+    "mutators": {
+        "@default": true,
+        // assert() narrows a type for PHPStan and checks nothing a test could reach: removing it changes no behaviour
+        "global-ignoreSourceCodeByRegex": ["\\s*assert\\(.*\\);"],
+        // protected -> private: the base classes' hooks are for subclasses to use, which is a design choice and no behaviour
+        "ProtectedVisibility": false,
+        // public -> protected of a guard's test method (ampf\Kit\Testing\Guard): a method that names its data provider starts at
+        // the line of its attribute, which no test runs, so the mutant counts as uncovered; the tests of a guard call every
+        // test method from outside the class and fail on a protected one
+        "PublicVisibility": {
+            "ignoreSourceCodeByRegex": ["public function test\\w+\\(.*"]
+        },
+        // true -> false in the arguments of a guard's #[DataProvider] (skip a test whose data is empty, check the argument
+        // count): PHPUnit reads the attribute when it builds the suite, and the tests of a guard call its methods directly
+        "TrueValue": {
+            "ignoreSourceCodeByRegex": ["#\\[DataProvider\\(.*"]
+        }
+    },
+    // The thresholds for the whole application: MSI counts code that no test runs as escaped (docker/mutation passes
+    // --with-uncovered), the covered MSI only the code that a test runs. Every mutant is killed, or exempted above with
+    // the reason.
+    "minMsi": 100,
+    "minCoveredMsi": 100
+}
