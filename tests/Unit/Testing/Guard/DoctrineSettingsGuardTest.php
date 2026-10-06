@@ -14,8 +14,8 @@ use PHPUnit\Framework\TestCase;
  * The guard over applications that leave the `doctrine` block to the framework and the package
  * (tests/Fixtures/DoctrineSettingsGuard/Abiding), that set both blocks themselves and keep every entry of theirs
  * (Repeating), and that replace them without some (Breaking: the web loses both entries of the database types, the
- * command line has another class for the UUID). A guard is a TestCase, which takes its name: PHP-CS-Fixer writes
- * `new class('name')`, PSR-12 `new class ('name')`.
+ * command line has another class for the UUID and has not the immutable datetimes). A guard is a TestCase, which takes
+ * its name: PHP-CS-Fixer writes `new class('name')`, PSR-12 `new class ('name')`.
  *
  * @phpcs:disable PSR12.Classes.AnonClassDeclaration.SpaceAfterKeyword
  */
@@ -99,7 +99,13 @@ final class DoctrineSettingsGuardTest extends TestCase
                     . 'The doctrine.mappingOverrides of the http configuration do not keep "uuid" => guid, which the'
                     . ' framework or the package sets: an application that sets the block repeats their entries beside'
                     . ' its own.',
-                'cli typeOverrides' => 'The doctrine.typeOverrides of the cli configuration do not keep "guid" =>'
+                'cli typeOverrides' => 'The doctrine.typeOverrides of the cli configuration do not keep'
+                    . ' "datetime_immutable" => ampf\Kit\Doctrine\Type\UtcDateTimeImmutableType, which the framework or'
+                    . ' the package sets: an application that sets the block repeats their entries beside its own.' . PHP_EOL
+                    . 'The doctrine.typeOverrides of the cli configuration do not keep "datetimetz_immutable" =>'
+                    . ' ampf\Kit\Doctrine\Type\UtcDateTimeImmutableType, which the framework or the package sets: an'
+                    . ' application that sets the block repeats their entries beside its own.' . PHP_EOL
+                    . 'The doctrine.typeOverrides of the cli configuration do not keep "guid" =>'
                     . ' ampf\Kit\Doctrine\Type\UuidType, which the framework or the package sets: an application that sets'
                     . ' the block repeats their entries beside its own.',
             ],

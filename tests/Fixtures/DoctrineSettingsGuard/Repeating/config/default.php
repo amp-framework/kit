@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use ampf\Doctrine\Type\UTCDateTimeType;
+use ampf\Kit\Doctrine\Type\UtcDateTimeImmutableType;
 use ampf\Kit\Doctrine\Type\UuidType;
 
 // An application that sets both blocks itself: every entry of the framework's and the package's, and its own beside them
@@ -11,6 +12,8 @@ return [
         'typeOverrides' => [
             'datetime' => UTCDateTimeType::class,
             'datetimetz' => UTCDateTimeType::class,
+            'datetime_immutable' => UtcDateTimeImmutableType::class,
+            'datetimetz_immutable' => UtcDateTimeImmutableType::class,
             'guid' => UuidType::class,
             'money' => 'App\Doctrine\Type\MoneyType',
         ],

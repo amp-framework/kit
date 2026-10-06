@@ -22,14 +22,16 @@ developed together, a path repository (`{"type": "path", "url": "../kit"}`) link
 | `Helper\Text` | What the rules for the texts a person types have in common: kept without white space at its ends (`trim()`), one line (`isOneLine()`), lines (`isLines()`) |
 | `Doctrine\Entity\BaseEntity` | What every entity has: a UUID that the application assigns when the object is made, and `TABLE_OPTIONS`, the one character set and collation of every table (utf8mb4 and `utf8mb4_uca1400_ai_ci`) |
 | `Doctrine\Type\UuidType` | DBAL's `guid` as MariaDB's `UUID` column (16 bytes, text in and out) |
+| `Doctrine\Type\UtcDateTimeImmutableType` | DBAL's `datetime_immutable` (and `datetimetz_immutable`) with the database in UTC: a datetime is written as its UTC time, a value read is a `DateTimeImmutable` in UTC, whole seconds either way |
 | `Bootstrap\MigrationsFactory`, `Bootstrap\DoctrineConfiguration` | Doctrine Migrations over the application's `migrations` block (`bin/doctrine` and the guard of the migrations both use it), and the name of the migrations' own table, which the schema tool is told to leave alone (`ignoreMigrationsTable()`) |
 | `Testing\IntegrationTestCase` | ampf's `ApplicationTestCase` on a disposable MariaDB (below) |
 | `Testing\SelectCountingMiddleware`, `Testing\SelectCounter` | The count of the SELECT statements that every connection of the tests sends: the test's own and a request's (`countSelects()` reads it) |
 | `Testing\Guard\…` | Conventions as tests that an application points at its own files and at its running self (below) |
 
 `config/default.php` is the package's `doctrine` block, which an application lists after ampf's two files: every datetime in
-UTC and a database's enum read as a string (ampf's own entries) and `guid` as `UuidType`, which `doctrine.mappingOverrides`
-reads back as `guid`. No class is final.
+UTC and a database's enum read as a string (ampf's own entries: `datetime` and `datetimetz` as its mutable `UTCDateTimeType`),
+`datetime_immutable` and `datetimetz_immutable` as `UtcDateTimeImmutableType`, and `guid` as `UuidType`, which
+`doctrine.mappingOverrides` reads back as `guid`. No class is final.
 
 ## How an application wires it
 
@@ -60,6 +62,20 @@ and put their tables on `BaseEntity::TABLE_OPTIONS`:
 #[ORM\Table(name: 'notes', options: self::TABLE_OPTIONS)]
 class NoteEntity extends BaseEntity {}
 ```
+
+**The datetimes.** An entity maps an immutable datetime as it would without the package, and the database holds UTC with
+nothing converted by hand:
+
+```php
+#[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+private DateTimeImmutable $createdAt;
+```
+
+A value in any time zone is written as its UTC time (the value itself is left as it is), and a value read is a
+`DateTimeImmutable` in UTC, whatever time zone PHP has as its default. The column is DBAL's `DATETIME`, which holds whole
+seconds: the fraction of a second of a value written is cut off, not rounded, and a column that a migration made with
+fractions of a second is refused when it is read. A value that is no datetime is refused with DBAL's `InvalidType`, a text
+that is no `Y-m-d H:i:s` with its `InvalidFormat`. `datetime` stays ampf's `UTCDateTimeType`, a mutable `DateTime` in UTC.
 
 **The migrations.** The application's `migrations` block lists its migrations; `MigrationsFactory::create($config,
 $entityManager)` reads it (`bin/doctrine` and `MigrationsGuard` both call it):

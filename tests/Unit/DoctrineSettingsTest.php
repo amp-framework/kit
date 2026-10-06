@@ -6,6 +6,7 @@ namespace ampf\Kit\Tests\Unit;
 
 use ampf\Bootstrap\ApplicationContext;
 use ampf\Doctrine\Type\UTCDateTimeType;
+use ampf\Kit\Doctrine\Type\UtcDateTimeImmutableType;
 use ampf\Kit\Doctrine\Type\UuidType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -13,7 +14,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * The package's `doctrine` block next to ampf's: the files merge one level deep, so a nested array of a later file
  * replaces the whole one of ampf's, and the package's overrides must still hold every one of ampf's (every datetime in
- * UTC, a database's enum read as a string) beside its own (`guid` as MariaDB's UUID, and a UUID column read back as one).
+ * UTC, a database's enum read as a string) beside its own (the immutable datetimes in UTC, `guid` as MariaDB's UUID, and a
+ * UUID column read back as one).
  */
 final class DoctrineSettingsTest extends TestCase
 {
@@ -50,12 +52,14 @@ final class DoctrineSettingsTest extends TestCase
         }
     }
 
-    public function testGuidIsMariaDbsUuidBesideAmpfsDatetimesInUtc(): void
+    public function testTheImmutableDatetimesAreInUtcAndGuidIsMariaDbsUuidBesideAmpfsMutableDatetimesInUtc(): void
     {
         self::assertSame(
             [
                 'datetime' => UTCDateTimeType::class,
                 'datetimetz' => UTCDateTimeType::class,
+                'datetime_immutable' => UtcDateTimeImmutableType::class,
+                'datetimetz_immutable' => UtcDateTimeImmutableType::class,
                 'guid' => UuidType::class,
             ],
             self::block('typeOverrides', 'vendor/amp-framework/ampf/config/default.php', 'config/default.php'),

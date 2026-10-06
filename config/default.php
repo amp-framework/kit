@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use ampf\Doctrine\Type\UTCDateTimeType;
+use ampf\Kit\Doctrine\Type\UtcDateTimeImmutableType;
 use ampf\Kit\Doctrine\Type\UuidType;
 
 /*
@@ -13,13 +14,18 @@ use ampf\Kit\Doctrine\Type\UuidType;
  *
  * The database: `configuration` and `connectionParams` are the machine's (config/local.php). A block of this file
  * replaces the whole one of ampf's, so each repeats ampf's entries (DoctrineSettingsTest holds them): every datetime in
- * UTC, a database's enum read as a string; and `guid` becomes MariaDB's UUID, which is read back as one.
+ * UTC, a database's enum read as a string; and the package adds its own: the immutable datetimes in UTC as well, and
+ * `guid` as MariaDB's UUID, which is read back as one. `datetime_immutable` is what the ORM chooses for a
+ * DateTimeImmutable; `datetimetz_immutable` is, on MariaDB, a column without a time zone, like `datetimetz`, which would
+ * hold the time of whichever zone its value happens to have.
  */
 return [
     'doctrine' => [
         'typeOverrides' => [
             'datetime' => UTCDateTimeType::class,
             'datetimetz' => UTCDateTimeType::class,
+            'datetime_immutable' => UtcDateTimeImmutableType::class,
+            'datetimetz_immutable' => UtcDateTimeImmutableType::class,
             'guid' => UuidType::class,
         ],
         'mappingOverrides' => [

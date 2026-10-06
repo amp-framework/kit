@@ -22,8 +22,8 @@ final class Version20261004000000 extends AbstractMigration
             . ' DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_uca1400_ai_ci`',
         );
         $this->addSql(
-            'CREATE TABLE notes (id UUID NOT NULL, text VARCHAR(200) NOT NULL, shelf_id UUID NOT NULL,'
-            . ' INDEX IDX_11BA68C7C12FBC0 (shelf_id), PRIMARY KEY (id))'
+            'CREATE TABLE notes (id UUID NOT NULL, text VARCHAR(200) NOT NULL, written_at DATETIME DEFAULT NULL,'
+            . ' shelf_id UUID NOT NULL, INDEX IDX_11BA68C7C12FBC0 (shelf_id), PRIMARY KEY (id))'
             . ' DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_uca1400_ai_ci`',
         );
         $this->addSql(

@@ -11,7 +11,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * The application's `doctrine` block next to the framework's and the package's. The files merge one level deep: a nested
  * array that a file sets replaces the whole one of the files merged before it, so an application that sets
  * `typeOverrides` or `mappingOverrides` itself must still hold every entry that ampf's and the package's files set (every
- * datetime in UTC, `guid` as MariaDB's UUID, a UUID column read back as one, an enum read as a string), beside its own.
+ * datetime in UTC, the immutable ones too, `guid` as MariaDB's UUID, a UUID column read back as one, an enum read as a
+ * string), beside its own.
  * The configuration is merged as the entry points do (AbstractFileGuard::configuration()), for each transport. An
  * application extends the guard in one small class that names its project root.
  */
